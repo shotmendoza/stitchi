@@ -24,7 +24,7 @@ def add(base_video_index: int, add_video_index: int, output_name: Optional[str] 
         if output_name[-1:-4] != ".mp4":
             raise ValueError(f"output name {output_name} is missing the '.mp4' extension!")
     if not output_name:
-        output_name = f"COMBINED - {str(datetime.date.today())} - {v1.filename}-{v2.filename}.mp4"
+        output_name = f"COMBINED - {str(datetime.date.today())} - {v1.stem}-{v2.stem}.mp4"
     # We can change this in the config later on if we want to make this configurable
     export_path = f"{v1.folder_path}/{output_name}"
 
@@ -47,7 +47,7 @@ def cut(
         if output_name[-1:-4] != ".mp4":
             raise ValueError(f"output name {output_name} is missing the '.mp4' extension!")
     if not output_name:
-        output_name = f"Trimmed - {str(datetime.date.today())} - {v1.filename} - from {start}.mp4"
+        output_name = f"Trimmed - {str(datetime.date.today())} - {v1.stem} - from {start}.mp4"
     # We can change this in the config later on if we want to make this configurable
     export_path = f"{v1.folder_path}/{output_name}"
 

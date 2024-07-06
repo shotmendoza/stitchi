@@ -18,12 +18,14 @@ class Video:
         Attributes:
             - filepath: the full path, we use this as arguments for ffmpeg functions
             - filename: the name of the video file (i.e. example.mp4)
+            - stem: name of the video without the extension (i.e. example)
             - folder_path: the parent folder path (i.e. main_directory/*)
             - meta: holds data regarding the video file
 
         :param file_path: the pathlib.Path file path to the Video
         """
         self.filename = str(file_path.name)
+        self.stem = str(file_path.stem)
         self.folder_path = str(file_path.parent)
 
         # Creation of the Metadata
@@ -126,12 +128,24 @@ class VideoEditor:
 
         if not end and not duration:
             # args not given
-            trimmed = ffmpeg.trim(in1, start=start).setpts('PTS-STARTPTS')
-        if all([end, duration]) or duration:
+            trimmed_vid = in1.video.trim(start=start).setpts('PTS-STARTPTS')
+            trimmed_aud = in1.audio.filter_('atrim', start=start).filter_('asetpts', 'PTS-STARTPTS')
+        elif all([end, duration]) or duration:
             # duration is given so takes priority
-            trimmed = ffmpeg.trim(in1, start=start, end=start + duration).setpts('PTS-STARTPTS')
+            trimmed_vid = in1.video.trim(start=start, end=start + duration).setpts('PTS-STARTPTS')
+            trimmed_aud = (
+                in1.audio
+                .filter_('atrim', start=start, end=start + duration)
+                .filter_('asetpts', 'PTS-STARTPTS')
+            )
         else:
-            trimmed = ffmpeg.trim(in1, start=start, end=end).setpts('PTS-STARTPTS')
+            trimmed_vid = in1.video.trim(start=start, end=end).setpts('PTS-STARTPTS')
+            trimmed_aud = (
+                in1.audio
+                .filter_('atrim', start=start, end=end)
+                .filter_('asetpts', 'PTS-STARTPTS')
+            )
 
-        out = ffmpeg.output(trimmed, output_path)
+        joined = ffmpeg.concat(trimmed_vid, trimmed_aud, v=1, a=1).node
+        out = ffmpeg.output(joined[0], joined[1], output_path)
         out.run()
