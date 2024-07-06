@@ -2,10 +2,10 @@ import datetime
 from typing import Optional
 
 import typer
+from rich.align import Align
 
 from rich.console import Console
 from rich.table import Table
-from rich.progress import Progress, SpinnerColumn
 
 from backend.classes import VideoEditor
 from backend.funcs import pull_from_directory
@@ -58,11 +58,20 @@ def cut(
     typer.echo(f"Saved to {export_path}")
 
 
+@app.command(short_help="plays the video")
+def play(video_index: int):
+    videos = pull_from_directory()
+    typer.launch(videos[video_index].filepath)
+
+
 @app.command(short_help="shows video list")
 def show():
     videos = pull_from_directory()
+    console.clear()
 
-    table = Table(title="Available Videos")
+    table = Table(title="Available Videos", leading=True)
+    table_centered = Align.center(table)
+
     table.add_column("#")
     table.add_column("filename")
     table.add_column("full-path")
@@ -70,8 +79,7 @@ def show():
 
     for idx, video in enumerate(videos):
         table.add_row(f"{idx}", video.filename, video.folder_path, video.meta)
-
-    console.log(table)
+    console.log(table_centered)
 
 
 if __name__ == "__main__":

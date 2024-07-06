@@ -20,7 +20,12 @@ def pull_from_directory(file_ext=".mp4", *index_file_args, **index_file_kw) -> l
         config_options = json.loads(j_file.read())
 
     if config_options["folder"] == "default":
-        folder_path = Folder(Path(__file__).parent.parent / "files")
+        default_path = Path(__file__).parent.parent / "files"
+        if default_path.exists():
+            folder_path = Folder(default_path)
+        else:
+            default_path.mkdir(parents=True, exist_ok=True)
+            folder_path = Folder(default_path)
     else:
         folder_path = Folder(config_options["folder"])
     videos = [Video(v) for v in folder_path.index_files(file_ext=file_ext, *index_file_args, **index_file_kw)]
