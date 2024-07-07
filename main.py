@@ -1,4 +1,5 @@
 import datetime
+import random
 from typing import Optional
 
 import typer
@@ -60,9 +61,14 @@ def trim(
     typer.echo(f"Saved to {export_path}")
 
 
-@app.command(short_help="plays the video. takes an index integer as an argument.")
-def play(video_index: int):
+@app.command(short_help="plays the video. takes an index integer as an argument. Shuffles if left blank")
+def play(video_index: Optional[int] = None):
     videos = ApplicationConfig.pull_from_directory(recurse=True)
+
+    if not video_index:
+        if len(videos) == 0:
+            raise IndexError(f"There are no videos in the folder!")
+        video_index = random.randint(0, len(videos) - 1)
     typer.launch(videos[video_index].filepath)
 
     video_text = Text(f"Opened: {videos[video_index].filename}", justify="center")
