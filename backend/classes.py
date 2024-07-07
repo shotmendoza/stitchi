@@ -1,13 +1,11 @@
 import json
 from datetime import datetime
+from functools import lru_cache
 from typing import Optional
 
 import ffmpeg
-from dirlin import Path
-
-
-class ApplicationConfig:
-    pass
+import pandas as pd
+from dirlin import Path, Folder
 
 
 class Video:
@@ -177,3 +175,105 @@ class VideoEditor:
         joined = ffmpeg.concat(trimmed_vid, trimmed_aud, v=1, a=1).node
         out = ffmpeg.output(joined[0], joined[1], output_path)
         out.run()
+
+
+class ApplicationConfig:
+    @classmethod
+    def return_current_directory(cls):
+        """
+        Function for returning the current working directory
+
+        """
+        get_path = str(Path(__file__).parent.parent / "app_config.json")
+
+        with open(get_path, "r") as f:
+            config_options = json.loads(f.read())
+        if config_options["folder"] == "default":
+            path = Path(__file__).parent.parent / "files"
+        else:
+            path = config_options["folder"]
+        return path
+
+    @classmethod
+    def change_current_directory(cls, cwd: str | Path) -> bool:
+        """
+        Function for changing the current working directory and writes in the app_config JSON file
+        :param cwd: the working directory you want to update to. Can set to 'default' to change it back
+        :return: return True when complete
+        """
+        get_path = str(Path(__file__).parent.parent / "app_config.json")
+
+        try:
+            if isinstance(cwd, str) and cwd != "default":
+                cwd = Path(cwd)
+            if cwd != "default":
+                assert cwd.exists()
+        except AssertionError:
+            raise AssertionError(f"The directory {cwd} does not exist.")
+
+        with open(get_path, "r+") as f:
+            config_options = json.load(f)
+            config_options['folder'] = str(cwd)
+            f.seek(0)
+            json.dump(config_options, f, indent=4)
+            f.truncate()
+        return True
+
+    @classmethod
+    @lru_cache()
+    def pull_from_directory(cls, file_ext=".mp4", *index_file_args, **index_file_kw) -> list[Video]:
+        """
+        Pulls from the app_config.json file in the root of the app, to determine which folder to
+        pull the files from. The function itself returns a Folder object.
+
+        :return:
+        """
+        get_path = str(Path(__file__).parent.parent / "app_config.json")
+
+        with open(get_path, "r") as j_file:
+            config_options = json.loads(j_file.read())
+
+        if config_options["folder"] == "default":
+            default_path = Path(__file__).parent.parent / "files"
+            if default_path.exists():
+                folder_path = Folder(default_path)
+            else:
+                default_path.mkdir(parents=True, exist_ok=True)
+                folder_path = Folder(default_path)
+        else:
+            folder_path = Folder(config_options["folder"])
+        videos = [Video(v) for v in folder_path.index_files(file_ext=file_ext, *index_file_args, **index_file_kw)]
+        return videos
+
+    @classmethod
+    def as_dataframe(cls, *index_file_args, **index_file_kw) -> pd.DataFrame:
+        """
+        returns the video list as a dataframe. this allows the sorting of the table in the main application.
+
+        :param file_ext: the extension we are searching for in the folders
+        :param index_file_args: arguments for the index_files function
+        :param index_file_kw: keyword arguments for the index_files function
+        :return: dataframe representation of the file and the metadata
+        """
+        videos = cls.pull_from_directory(*index_file_args, **index_file_kw)
+
+        df_mapping = {
+            "idx": [],
+            "filename": [],
+            "folder_path": [],
+            "size": [],
+            "date_created": [],
+            "date_modified": [],
+            "date_accessed": []
+        }
+        for idx, video in enumerate(videos):
+            df_mapping["idx"].append(idx)
+            df_mapping["filename"].append(video.filename)
+            df_mapping["folder_path"].append(video.folder_path)
+            df_mapping["size"].append(video.size)
+            df_mapping["date_created"].append(video.date_created)
+            df_mapping["date_modified"].append(video.date_last_modified)
+            df_mapping["date_accessed"].append(video.date_last_opened)
+
+        df = pd.DataFrame.from_dict(df_mapping)
+        return df
