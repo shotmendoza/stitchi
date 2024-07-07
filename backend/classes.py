@@ -52,6 +52,34 @@ class Video:
         """
         return str(self._filepath)
 
+    @property
+    def size(self):
+        """
+        Size in mb of the file
+        """
+        return json.loads(self.meta)["size"]
+
+    @property
+    def date_last_opened(self):
+        """
+        date the file was last opened
+        """
+        return json.loads(self.meta)["last_opened"]
+
+    @property
+    def date_last_modified(self):
+        """
+        date the file was last modified
+        """
+        return json.loads(self.meta)["last_modified"]
+
+    @property
+    def date_created(self):
+        """
+        date the file was created
+        """
+        return json.loads(self.meta)["created"]
+
     def __repr__(self):
         return f"filename: {self.filename}: {self.meta}"
 
