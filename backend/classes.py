@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import datetime
 from functools import lru_cache
 from typing import Optional
@@ -25,6 +26,7 @@ class Video:
         self.filename = str(file_path.name)
         self.stem = str(file_path.stem)
         self.folder_path = str(file_path.parent)
+        self._filepath = file_path
 
         # Creation of the Metadata
         _size = f"{round(file_path.stat().st_size * 0.000001, 2)} MB"
@@ -34,19 +36,39 @@ class Video:
             _created = f"{datetime.fromtimestamp(file_path.stat().st_birthtime)}"
         except AttributeError:
             _created = "Unknown"
+
+        # metadata from ffmpeg.probe
+        try:
+            _probe = ffmpeg.probe(str(file_path))
+            _vs = next((stream for stream in _probe["streams"] if stream['codec_type'] == 'video'), None)
+        except Exception as e:
+            print(e)
+            _vs = dict()
+            _vs['duration'] = 60
+            _vs['avg_frame_rate'] = '30'
+            _vs['width'] = 0
+            _vs['height'] = 0
+
+        _duration = float(_vs['duration'])
+        _fps = eval(_vs["avg_frame_rate"])
+        _total_frames = int(_duration * _fps)
+        _resolution = f"{_vs['width']}x{_vs['height']}"
+
         _meta = {
             "size": _size,
             "last_opened": _last_opened,
             "last_modified": _last_modified,
-            "created": _created
+            "created": _created,
+            "duration": _duration / 60,
+            "frames": _total_frames,
+            "resolution": _resolution
         }
         self.meta = json.dumps(_meta)
-        self._filepath = file_path
 
     @property
     def filepath(self):
         """
-        Full path of the video file. Includes the parent and the filename.
+        Full path of the video file. Includes the parent and the filename. Used for ffmpeg functions.
         """
         return str(self._filepath)
 
@@ -77,6 +99,28 @@ class Video:
         date the file was created
         """
         return json.loads(self.meta)["created"]
+
+    @property
+    def duration(self):
+        """
+        duration of the video
+        """
+        return json.loads(self.meta)["duration"]
+
+    @property
+    def frames(self):
+        """
+        number of frames
+        """
+        return json.loads(self.meta)["frames"]
+
+    @property
+    def resolution(self):
+        """
+        resolution of the video
+
+        """
+        return json.loads(self.meta)["resolution"]
 
     def __repr__(self):
         return f"filename: {self.filename}: {self.meta}"
@@ -176,6 +220,32 @@ class VideoEditor:
         out = ffmpeg.output(joined[0], joined[1], output_path)
         out.run()
 
+    @classmethod
+    def generate_thumbnail_sheet(
+            cls,
+            video: Video,
+            output_path: str,
+            columns: Optional[int] = 5,
+            rows: Optional[int] = 4
+    ):
+        thumbnail_width = 320
+        thumbnail_length = 240
+
+        # frames between each snapshot
+        frames = max(1, math.floor(video.frames / (columns * rows)))
+        metadata_text = f"Filename: {video.filename}, File Size: {video.size}"
+
+        in1 = ffmpeg.input(video.filepath)
+        out = (
+            in1
+            .filter('select', fr'not(mod(n, {frames}))')
+            .filter('scale', thumbnail_width, thumbnail_length)
+            .filter('drawtext', text='%{pts:hms}', x=10, y=10, fontsize=24, fontcolor='white')
+            .filter('tile', f'{columns}x{rows}')
+            .output(output_path, vsync='vfr', vframes=1)
+        )
+        out.run()
+
 
 class ApplicationConfig:
     @classmethod
@@ -264,7 +334,9 @@ class ApplicationConfig:
             "size": [],
             "date_created": [],
             "date_modified": [],
-            "date_accessed": []
+            "date_accessed": [],
+            "duration": [],
+            "resolution": []
         }
         for idx, video in enumerate(videos):
             df_mapping["idx"].append(idx)
@@ -274,6 +346,8 @@ class ApplicationConfig:
             df_mapping["date_created"].append(video.date_created)
             df_mapping["date_modified"].append(video.date_last_modified)
             df_mapping["date_accessed"].append(video.date_last_opened)
+            df_mapping["duration"].append(video.duration)
+            df_mapping["resolution"].append(video.resolution)
 
         df = pd.DataFrame.from_dict(df_mapping)
         return df

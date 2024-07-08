@@ -62,16 +62,16 @@ def trim(
 
 
 @app.command(short_help="plays the video. takes an index integer as an argument. Shuffles if left blank")
-def play(video_index: Optional[int] = None):
+def play(video_index: int, shuffle: Optional[bool] = False):
     videos = ApplicationConfig.pull_from_directory(recurse=True)
 
-    if not video_index:
+    if shuffle:
         if len(videos) == 0:
             raise IndexError(f"There are no videos in the folder!")
         video_index = random.randint(0, len(videos) - 1)
     typer.launch(videos[video_index].filepath)
 
-    video_text = Text(f"Opened: {videos[video_index].filename}", justify="center")
+    video_text = Text(f"Opened: {videos[video_index].filename} ({video_index})", justify="center")
     video_text.stylize("bold green on white", 0, 7)
     video_text.stylize("bold red on white", 8)
     console.print(video_text, justify="center")
@@ -92,6 +92,8 @@ def show(sort: Optional[list[str]] = None, ascending: Optional[bool] = True):
     table.add_column("date created")
     table.add_column("date modified")
     table.add_column("date accessed")
+    table.add_column("duration")
+    table.add_column("resolution")
 
     # Dataframe Configuration
     if sort:
@@ -108,7 +110,9 @@ def show(sort: Optional[list[str]] = None, ascending: Optional[bool] = True):
             str(video.size),
             str(video.date_created),
             str(video.date_modified),
-            str(video.date_accessed)
+            str(video.date_accessed),
+            str(video.duration),
+            str(video.resolution)
         )
     console.log(table_centered)
 
@@ -129,6 +133,31 @@ def change_directory():
             console.print(f"Changed directory to [green on white]{str(cwd)}[/green on white]!")
             return
     console.print(f"[green]Directory is the same![/green]")
+
+
+@app.command(short_help="generates a thumbnail contact sheet")
+def thumbnail_sheet(
+        video_index: int,
+        output_name: Optional[str] = None,
+        columns: Optional[int] = 5,
+        rows: Optional[int] = 4
+):
+    videos = ApplicationConfig.pull_from_directory(recurse=True)
+    v1 = videos[video_index]
+
+    allowed = [".png", "jpeg", ".bmp", "tiff"]
+    if output_name:
+        if output_name[-1:-4] not in allowed:
+            raise ValueError(f"output name {output_name[-1:-4]} is NOT an approved file type!")
+    if not output_name:
+        output_name = f"Thumbnail Sheet - {v1.stem} - {str(datetime.date.today())}.png"
+    # We can change this in the config later on if we want to make this configurable
+    export_path = f"{v1.folder_path}/{output_name}"
+    VideoEditor.generate_thumbnail_sheet(video=v1, output_path=export_path, columns=columns, rows=rows)
+
+    typer.echo(f"Complete!")
+    typer.echo(f"Created a Thumbnail Sheet for {v1.stem}!")
+    typer.echo(f"Saved to {export_path}")
 
 
 if __name__ == "__main__":
