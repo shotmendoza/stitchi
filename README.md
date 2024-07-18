@@ -1,5 +1,4 @@
 # stitchi
-***
 cli tool for video wrangling
 
 This is currently just a proof of concept for video editing through scripts.
