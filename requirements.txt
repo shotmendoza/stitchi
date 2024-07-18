@@ -1,5 +1,5 @@
 click==8.1.7
-Dirlin==0.1.14
+Dirlin==0.1.15
 et-xmlfile==1.1.0
 ffmpeg-python==0.2.0
 future==1.0.0
