@@ -16,6 +16,11 @@ A lot of these features can be expanded in the future, but the current features 
 This is currently a CLI tool, so you will be interacting with the terminal when using this. Can be expanded into
 another interface if this tool were to be further worked on.
 
+To install the package, you can use the following:
+```shell
+pip install stitchi
+```
+
 ## 2.1 Getting Help
 Let's take a look at how to work with this application.
 
