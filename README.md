@@ -28,14 +28,14 @@ Let's take a look at how to work with this application.
 
 To take a look at the available menu options, type in the following:
 ```shell
-python main.py
+stitchi
 ```
 ### 2.1.2 Help Option
 At any time, you can take one of the commands and add the `--help` option to get more information on what the
 function needs to process.
 
 ```shell
-python main.py add --help
+stitchi add --help
 ```
 
 ### 2.1.3 Example of Help Option Output
@@ -53,7 +53,7 @@ Let's get the list of videos we have available by typing `show` command, to get 
 you have available.
 
 ```shell
-python main.py show
+stitchi show
 ```
 
 The output should be a table with a lot of data, including the path, the size of the file and when it was created.
@@ -67,7 +67,7 @@ When left blank, it will be given the default name.
 - Remember, that the argument is currently the fullpath for the output name
 
 ```shell
-python main.py add 0 1
+stitchi add 0 1
 ```
 - This code would merge two videos, (#0 and #1) together.
 - Video #1 would get appended to the end of Video #0
@@ -82,3 +82,4 @@ python main.py add 0 1
 5. Can automate the entire video editing process (will need to be able to run independent of the CLI)
 6. Adding multiple videos together at once
 7. The optional path for add could be cleaned up to be able to handle whitespace
+8. Easy video transfers (make it easier to save down videos you want to edit)
