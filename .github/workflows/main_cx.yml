@@ -1,0 +1,32 @@
+name: Build with cx_Freeze
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install cx_Freeze
+        pip install -r requirements.txt
+
+    - name: Build with cx_Freeze
+      run: |
+        python setup.py build
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: executable
+        path: build/exe.win-amd64-3.11  # Path to the built executable directory
