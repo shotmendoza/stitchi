@@ -294,7 +294,7 @@ class ApplicationConfig:
     def pull_from_directory(cls, file_ext=".mp4", *index_file_args, **index_file_kw) -> list[Video]:
         """
         Pulls from the app_config.json file in the root of the app, to determine which folder to
-        pull the files from. The function itself returns a Folder object.
+        pull the files from. The function itself returns a Folder object. If missing, creates a folder
 
         :return:
         """
@@ -305,11 +305,9 @@ class ApplicationConfig:
 
         if config_options["folder"] == "default":
             default_path = Path(__file__).parent.parent / "files"
-            if default_path.exists():
-                folder_path = Folder(default_path)
-            else:
+            if not default_path.exists():
                 default_path.mkdir(parents=True, exist_ok=True)
-                folder_path = Folder(default_path)
+            folder_path = Folder(default_path)
         else:
             folder_path = Folder(config_options["folder"])
         videos = [Video(v) for v in folder_path.index_files(file_ext=file_ext, *index_file_args, **index_file_kw)]

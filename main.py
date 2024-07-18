@@ -24,8 +24,8 @@ def add(base_video_index: int, add_video_index: int, output_name: Optional[str] 
     v2 = videos[add_video_index]
 
     if output_name:
-        if output_name[-1:-4] != ".mp4":
-            raise ValueError(f"output name {output_name} is missing the '.mp4' extension!")
+        if output_name[-4:] != ".mp4":
+            raise ValueError(f"output name {output_name} is missing the '.mp4' extension! ({output_name[-4:]})")
     if not output_name:
         output_name = f"COMBINED - {str(datetime.date.today())} - {v1.stem}-{v2.stem}.mp4"
     # We can change this in the config later on if we want to make this configurable
@@ -47,7 +47,7 @@ def trim(
     v1 = videos[video_index]
 
     if output_name:
-        if output_name[-1:-4] != ".mp4":
+        if output_name[-4:] != ".mp4":
             raise ValueError(f"output name {output_name} is missing the '.mp4' extension!")
     if not output_name:
         output_name = f"Trimmed - {str(datetime.date.today())} - {v1.stem} - from {start}.mp4"
@@ -77,7 +77,9 @@ def play(video_index: int, shuffle: Optional[bool] = False):
     console.print(video_text, justify="center")
 
 
-@app.command(short_help="shows the video list. first column is the index integer used for the app.")
+@app.command(
+    help="shows the video list. first column is the index integer used for the app. When sorting, any space "
+         "needs to be hyphenated '-'. For example, 'date-created'.")
 def show(sort: Optional[list[str]] = None, ascending: Optional[bool] = True):
     videos = ApplicationConfig.as_dataframe(recurse=True)
     console.clear()
@@ -87,7 +89,7 @@ def show(sort: Optional[list[str]] = None, ascending: Optional[bool] = True):
     table_centered = Align.center(table)
     table.add_column("#")
     table.add_column("filename")
-    table.add_column("full-path")
+    table.add_column("full path")
     table.add_column("size")
     table.add_column("date created")
     table.add_column("date modified")
@@ -96,11 +98,24 @@ def show(sort: Optional[list[str]] = None, ascending: Optional[bool] = True):
     table.add_column("resolution")
 
     # Dataframe Configuration
+    user_sort_input_mapping = {
+        "#": "idx",
+        "file-name": "filename",
+        "full-path": "folder_path",
+        "fullpath": "folder_path",
+        "size": "size",
+        "date-created": "date_created",
+        "date-modified": "date_modified",
+        "date-accessed": "date_accessed",
+        "duration": "duration",
+        "resolution": "resolution",
+    }
     if sort:
         try:
+            sort = [user_sort_input_mapping[f.lower()] for f in sort]
             videos = videos.sort_values(by=sort, ascending=ascending)
-        except Exception as e:
-            raise e
+        except KeyError:
+            raise KeyError(f"{sort} is not valid! Available: {videos.columns}")
 
     for video in videos.itertuples():
         table.add_row(
@@ -147,7 +162,7 @@ def thumbnail_sheet(
 
     allowed = [".png", "jpeg", ".bmp", "tiff"]
     if output_name:
-        if output_name[-1:-4] not in allowed:
+        if output_name[-4:] not in allowed:
             raise ValueError(f"output name {output_name[-1:-4]} is NOT an approved file type!")
     if not output_name:
         output_name = f"Thumbnail Sheet - {v1.stem} - {str(datetime.date.today())}.png"
