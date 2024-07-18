@@ -11,7 +11,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.text import Text
 
-from stitch.backend.classes import VideoEditor, ApplicationConfig
+from stitchi.backend.classes import VideoEditor, ApplicationConfig
 
 console = Console()
 app = typer.Typer(no_args_is_help=True)
