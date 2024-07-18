@@ -44,8 +44,12 @@ For the `add` command, you need the `base_video_index` of the main video, and th
 want to add to the end of the base video. Let's take a look at how to get the index of the two videos first.
 
 ### 3.1 Available Videos
-Let's get the list of videos we have available by typing `python main.py show`, to get a table of all the videos
+Let's get the list of videos we have available by typing `show` command, to get a table of all the videos
 you have available.
+
+```shell
+python main.py show
+```
 
 The output should be a table with a lot of data, including the path, the size of the file and when it was created.
 The index of the file you are looking for is the very first column under `#`.
