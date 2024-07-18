@@ -17,7 +17,7 @@ A lot of these features can be expanded in the future, but the current features 
 ## 2.0.1 Downloading FFMPEG
 The following is taken from the `ffmpeg-python` docs, which explains how to install FFMPEG:
 
-Before using ffmpeg-python, FFmpeg must be installed and accessible via the $PATH environment variable.
+FFmpeg must be installed and accessible via the $PATH environment variable.
 
 There are a variety of ways to install FFmpeg, such as the official download [links](https://ffmpeg.org/download.html), or using your package manager of choice (e.g. sudo apt install ffmpeg on Debian/Ubuntu, brew install ffmpeg on OS X, etc.).
 
@@ -32,7 +32,7 @@ Note: The actual version information displayed here may vary from one system to 
 ## 2.0.2 Installing Stitchi
 
 This is currently a CLI tool, so you will be interacting with the terminal when using this. Can be expanded into
-another interface if this tool were to be further worked on.
+another interface if this tool were to be further developed.
 
 To install the package, you can use the following:
 ```shell
