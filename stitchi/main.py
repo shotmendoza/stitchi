@@ -82,7 +82,6 @@ def play(video_index: int, shuffle: Optional[bool] = False):
          "needs to be hyphenated '-'. For example, 'date-created'.")
 def show(sort: Optional[list[str]] = None, ascending: Optional[bool] = True):
     videos = ApplicationConfig.as_dataframe(recurse=True)
-    console.clear()
 
     # Table Positioning
     table = Table(title="Available Videos", box=box.HORIZONTALS, leading=True, row_styles=["steel_blue3"])
@@ -163,7 +162,7 @@ def thumbnail_sheet(
     allowed = [".png", "jpeg", ".bmp", "tiff"]
     if output_name:
         if output_name[-4:] not in allowed:
-            raise ValueError(f"output name {output_name[-1:-4]} is NOT an approved file type!")
+            raise ValueError(f"output name {output_name[-4:]} is NOT an approved file type!")
     if not output_name:
         output_name = f"Thumbnail Sheet - {v1.stem} - {str(datetime.date.today())}.png"
     # We can change this in the config later on if we want to make this configurable
