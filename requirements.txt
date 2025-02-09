@@ -10,7 +10,7 @@ openpyxl==3.1.2
 pandas==2.2.2
 pathlib==1.0.1
 Pygments==2.18.0
-python-dateutil==2.9.0.post0
+python-dateutil>=2.9.0,<3.0
 pytz==2024.1
 pyxlsb==1.0.10
 rich==13.7.1
@@ -20,4 +20,3 @@ typer==0.12.3
 typing_extensions==4.12.2
 tzdata==2024.1
 xlrd==2.0.1
-
