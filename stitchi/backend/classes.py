@@ -10,7 +10,7 @@ from dirlin import Path, Folder
 
 
 class Video:
-    def __init__(self, file_path: Path):
+    def __init__(self, file_path: Path, *, initiate_metadata: bool = False):
         """
         An object representing a Video. Holds information regarding the video file.
 
@@ -22,48 +22,15 @@ class Video:
             - meta: holds data regarding the video file
 
         :param file_path: the pathlib.Path file path to the Video
+        :param initiate_metadata: initiate metadata flag, determines whether to load metadata from videos
         """
         self.filename = str(file_path.name)
         self.stem = str(file_path.stem)
         self.folder_path = str(file_path.parent)
         self._filepath = file_path
 
-        # Creation of the Metadata
-        _size = f"{round(file_path.stat().st_size * 0.000001, 2)} MB"
-        _last_opened = f"{datetime.fromtimestamp(file_path.stat().st_atime)}"
-        _last_modified = f"{datetime.fromtimestamp(file_path.stat().st_mtime)}"
-        try:
-            _created = f"{datetime.fromtimestamp(file_path.stat().st_birthtime)}"
-        except AttributeError:
-            _created = "Unknown"
-
-        # metadata from ffmpeg.probe
-        try:
-            _probe = ffmpeg.probe(str(file_path))
-            _vs = next((stream for stream in _probe["streams"] if stream['codec_type'] == 'video'), None)
-        except Exception as e:
-            print(e)
-            _vs = dict()
-            _vs['duration'] = 60
-            _vs['avg_frame_rate'] = '30'
-            _vs['width'] = 0
-            _vs['height'] = 0
-
-        _duration = float(_vs['duration'])
-        _fps = eval(_vs["avg_frame_rate"])
-        _total_frames = int(_duration * _fps)
-        _resolution = f"{_vs['width']}x{_vs['height']}"
-
-        _meta = {
-            "size": _size,
-            "last_opened": _last_opened,
-            "last_modified": _last_modified,
-            "created": _created,
-            "duration": _duration / 60,
-            "frames": _total_frames,
-            "resolution": _resolution
-        }
-        self.meta = json.dumps(_meta)
+        # separated process in order to save time
+        self.meta = self.get_metadata()
 
     @property
     def filepath(self):
@@ -124,6 +91,44 @@ class Video:
 
     def __repr__(self):
         return f"filename: {self.filename}: {self.meta}"
+
+    def get_metadata(self):
+        # Creation of the Metadata
+        _size = f"{round(self._filepath.stat().st_size * 0.000001, 2)} MB"
+        _last_opened = f"{datetime.fromtimestamp(self._filepath.stat().st_atime)}"
+        _last_modified = f"{datetime.fromtimestamp(self._filepath.stat().st_mtime)}"
+        try:
+            _created = f"{datetime.fromtimestamp(self._filepath.stat().st_birthtime)}"
+        except AttributeError:
+            _created = "Unknown"
+
+        # metadata from ffmpeg.probe
+        try:
+            _probe = ffmpeg.probe(str(self._filepath))
+            _vs = next((stream for stream in _probe["streams"] if stream['codec_type'] == 'video'), None)
+        except Exception as e:
+            print(e)
+            _vs = dict()
+            _vs['duration'] = 60
+            _vs['avg_frame_rate'] = '30'
+            _vs['width'] = 0
+            _vs['height'] = 0
+
+        _duration = float(_vs['duration'])
+        _fps = eval(_vs["avg_frame_rate"])
+        _total_frames = int(_duration * _fps)
+        _resolution = f"{_vs['width']}x{_vs['height']}"
+
+        _meta = {
+            "size": _size,
+            "last_opened": _last_opened,
+            "last_modified": _last_modified,
+            "created": _created,
+            "duration": _duration / 60,
+            "frames": _total_frames,
+            "resolution": _resolution
+        }
+        return json.dumps(_meta)
 
 
 class VideoEditor:
