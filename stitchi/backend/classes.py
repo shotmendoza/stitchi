@@ -30,7 +30,9 @@ class Video:
         self._filepath = file_path
 
         # separated process in order to save time
-        self.meta = self.get_metadata()
+        self.metadata: None | str = None
+        if initiate_metadata:
+            self.meta = self.get_metadata()
 
     @property
     def filepath(self):
